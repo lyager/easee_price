@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use std::env;
 use reqwest::blocking::Client;
 use serde::Deserialize;
+use clap::{App, Arg};
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -44,8 +45,31 @@ fn main() {
     // Get bearer
     let username = env::var("EASEE_USERNAME").expect("EASEE_USERNAME not set as environemnt variable");
     let password = env::var("EASEE_PASSWORD").expect("EASEE_PASSWORD not set as environment variable");
+    let site_id= env::var("EASEE_SITE_ID").expect("EASEE_SITEID not set as environment variable");
+
+    let matches = App::new("Easee Cost Post")
+        .arg(Arg::with_name("kwh_price")
+             .required(true)
+             .index(1))
+        .get_matches();
+
+    let kwh_price = matches.value_of("kwh_price").unwrap();
+    println!("Setting kwh price to: {}", kwh_price);
 
     let bearer = get_bearer(username, password);
     println!("Got bearer: {}", bearer);
+    // Set price
+    let mut data = HashMap::new();
+    data.insert("currencyId", "dkk");
+    data.insert("costPerKWh", kwh_price);
+    let client = Client::new();
+    let response = client.post(format!("https://api.easee.cloud/api/sites/{}/price", site_id))
+        .header("Accept", "application/json")
+        .header("Content-Type", "application/*+json")
+        .header("Authorization", format!("Bearer {}", bearer))
+        .json(&data)
+        .send()
+        .unwrap();
+    println!("Response = {:?}", response);
 
 }
