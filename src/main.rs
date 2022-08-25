@@ -10,13 +10,9 @@ struct BearerResponse {
    access_token: String 
 }
 
-fn main() {
-    let client = Client::new();
-    // Get bearer
+fn get_bearer(username: String, password: String) -> String {
     let base_url = "https://api.easee.cloud/api/accounts/login";
-    let username = env::var("EASEE_USERNAME").expect("EASEE_USERNAME not set as environemnt variable");
-    let password = env::var("EASEE_PASSWORD").expect("EASEE_PASSWORD not set as environment variable");
-
+    let client = Client::new();
     let mut data = HashMap::new();
     data.insert("password", password);
     data.insert("userName", username);
@@ -41,4 +37,15 @@ fn main() {
 
     let json = response.json::<BearerResponse>().unwrap();
     println!("Json response = {:?}", json.access_token);
+    json.access_token
+}
+
+fn main() {
+    // Get bearer
+    let username = env::var("EASEE_USERNAME").expect("EASEE_USERNAME not set as environemnt variable");
+    let password = env::var("EASEE_PASSWORD").expect("EASEE_PASSWORD not set as environment variable");
+
+    let bearer = get_bearer(username, password);
+    println!("Got bearer: {}", bearer);
+
 }
