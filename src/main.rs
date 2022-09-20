@@ -3,12 +3,33 @@ use std::collections::HashMap;
 use std::env;
 use reqwest::blocking::Client;
 use serde::Deserialize;
+use serde_json::{Result, Value}
 use clap::{App, Arg};
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 struct BearerResponse {
    access_token: String 
+}
+
+fn get_current_price() {
+    // http 'https://api.energidataservice.dk/datastore_search?resource_id=elspotprices&filters={"PriceArea":"DK2", "HourDK":"2022-08-25T21:00:00"}&sort=HourDK desc&fields=SpotPriceDKK' | jq .result.records\[0\].SpotPriceDKK
+    let client = Client::new();
+    let response = client.get("https://api.energidataservice.dk/datastore_search")
+        .query(&(["resource_id", "elspotprices"],
+                 ["filters", "{\"PriceArea\":\"DK2\", \"HourDK\":\"2022-08-25T21:00:00\"}"],
+                 ["sort", "HourDK"],
+                 ["fields", "SpotPriceDKK"]))
+        .send()
+        .unwrap();
+    //println!("get_current_price, response {:?}", response.text());
+
+    // Parse json
+    let json = response.json::<SpotPriceRecord>().unwrap();
+
+    println!("Price: {:?}", json);
+
+    panic!("I'm done");
 }
 
 fn get_bearer(username: String, password: String) -> String {
@@ -56,6 +77,10 @@ fn main() {
     let kwh_price = matches.value_of("kwh_price").unwrap();
     println!("Setting kwh price to: {}", kwh_price);
 
+    // Get price
+    get_current_price();
+
+    // Login to Easee
     let bearer = get_bearer(username, password);
     println!("Got bearer: {}", bearer);
     // Set price
