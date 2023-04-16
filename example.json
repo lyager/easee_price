@@ -1,0 +1,169 @@
+{
+  "total": 208548,
+  "filters": "{\"PriceArea\":[\"DK2\"]}",
+  "limit": 23,
+  "dataset": "Elspotprices",
+  "records": [
+    {
+      "HourUTC": "2023-04-15T21:00:00",
+      "HourDK": "2023-04-15T23:00:00",
+      "PriceArea": "DK2",
+      "SpotPriceDKK": 325.299988,
+      "SpotPriceEUR": 43.66
+    },
+    {
+      "HourUTC": "2023-04-15T20:00:00",
+      "HourDK": "2023-04-15T22:00:00",
+      "PriceArea": "DK2",
+      "SpotPriceDKK": 349.359985,
+      "SpotPriceEUR": 46.889999
+    },
+    {
+      "HourUTC": "2023-04-15T19:00:00",
+      "HourDK": "2023-04-15T21:00:00",
+      "PriceArea": "DK2",
+      "SpotPriceDKK": 372.609985,
+      "SpotPriceEUR": 50.009998
+    },
+    {
+      "HourUTC": "2023-04-15T18:00:00",
+      "HourDK": "2023-04-15T20:00:00",
+      "PriceArea": "DK2",
+      "SpotPriceDKK": 389.73999,
+      "SpotPriceEUR": 52.310001
+    },
+    {
+      "HourUTC": "2023-04-15T17:00:00",
+      "HourDK": "2023-04-15T19:00:00",
+      "PriceArea": "DK2",
+      "SpotPriceDKK": 406.279999,
+      "SpotPriceEUR": 54.529999
+    },
+    {
+      "HourUTC": "2023-04-15T16:00:00",
+      "HourDK": "2023-04-15T18:00:00",
+      "PriceArea": "DK2",
+      "SpotPriceDKK": 385.799988,
+      "SpotPriceEUR": 51.779999
+    },
+    {
+      "HourUTC": "2023-04-15T15:00:00",
+      "HourDK": "2023-04-15T17:00:00",
+      "PriceArea": "DK2",
+      "SpotPriceDKK": 341.170013,
+      "SpotPriceEUR": 45.790001
+    },
+    {
+      "HourUTC": "2023-04-15T14:00:00",
+      "HourDK": "2023-04-15T16:00:00",
+      "PriceArea": "DK2",
+      "SpotPriceDKK": 306.820007,
+      "SpotPriceEUR": 41.18
+    },
+    {
+      "HourUTC": "2023-04-15T13:00:00",
+      "HourDK": "2023-04-15T15:00:00",
+      "PriceArea": "DK2",
+      "SpotPriceDKK": 303.089996,
+      "SpotPriceEUR": 40.68
+    },
+    {
+      "HourUTC": "2023-04-15T12:00:00",
+      "HourDK": "2023-04-15T14:00:00",
+      "PriceArea": "DK2",
+      "SpotPriceDKK": 298.549988,
+      "SpotPriceEUR": 40.07
+    },
+    {
+      "HourUTC": "2023-04-15T11:00:00",
+      "HourDK": "2023-04-15T13:00:00",
+      "PriceArea": "DK2",
+      "SpotPriceDKK": 298.100006,
+      "SpotPriceEUR": 40.009998
+    },
+    {
+      "HourUTC": "2023-04-15T10:00:00",
+      "HourDK": "2023-04-15T12:00:00",
+      "PriceArea": "DK2",
+      "SpotPriceDKK": 302.119995,
+      "SpotPriceEUR": 40.549999
+    },
+    {
+      "HourUTC": "2023-04-15T09:00:00",
+      "HourDK": "2023-04-15T11:00:00",
+      "PriceArea": "DK2",
+      "SpotPriceDKK": 308.459991,
+      "SpotPriceEUR": 41.400002
+    },
+    {
+      "HourUTC": "2023-04-15T08:00:00",
+      "HourDK": "2023-04-15T10:00:00",
+      "PriceArea": "DK2",
+      "SpotPriceDKK": 327.309998,
+      "SpotPriceEUR": 43.93
+    },
+    {
+      "HourUTC": "2023-04-15T07:00:00",
+      "HourDK": "2023-04-15T09:00:00",
+      "PriceArea": "DK2",
+      "SpotPriceDKK": 372.679993,
+      "SpotPriceEUR": 50.02
+    },
+    {
+      "HourUTC": "2023-04-15T06:00:00",
+      "HourDK": "2023-04-15T08:00:00",
+      "PriceArea": "DK2",
+      "SpotPriceDKK": 372.910004,
+      "SpotPriceEUR": 50.049999
+    },
+    {
+      "HourUTC": "2023-04-15T05:00:00",
+      "HourDK": "2023-04-15T07:00:00",
+      "PriceArea": "DK2",
+      "SpotPriceDKK": 306.73999,
+      "SpotPriceEUR": 41.169998
+    },
+    {
+      "HourUTC": "2023-04-15T04:00:00",
+      "HourDK": "2023-04-15T06:00:00",
+      "PriceArea": "DK2",
+      "SpotPriceDKK": 291.399994,
+      "SpotPriceEUR": 39.110001
+    },
+    {
+      "HourUTC": "2023-04-15T03:00:00",
+      "HourDK": "2023-04-15T05:00:00",
+      "PriceArea": "DK2",
+      "SpotPriceDKK": 283.200012,
+      "SpotPriceEUR": 38.009998
+    },
+    {
+      "HourUTC": "2023-04-15T02:00:00",
+      "HourDK": "2023-04-15T04:00:00",
+      "PriceArea": "DK2",
+      "SpotPriceDKK": 343.480011,
+      "SpotPriceEUR": 46.099998
+    },
+    {
+      "HourUTC": "2023-04-15T01:00:00",
+      "HourDK": "2023-04-15T03:00:00",
+      "PriceArea": "DK2",
+      "SpotPriceDKK": 372.980011,
+      "SpotPriceEUR": 50.060001
+    },
+    {
+      "HourUTC": "2023-04-15T00:00:00",
+      "HourDK": "2023-04-15T02:00:00",
+      "PriceArea": "DK2",
+      "SpotPriceDKK": 670.47998,
+      "SpotPriceEUR": 89.989998
+    },
+    {
+      "HourUTC": "2023-04-14T23:00:00",
+      "HourDK": "2023-04-15T01:00:00",
+      "PriceArea": "DK2",
+      "SpotPriceDKK": 834.469971,
+      "SpotPriceEUR": 112
+    }
+  ]
+}
