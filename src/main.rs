@@ -51,7 +51,7 @@ fn get_current_price() {
     assert!(response.status().is_success());
 
     let response_text = response.text().unwrap();
-    println!("get_current_price, response {:?}", response_text);
+    //println!("get_current_price, response {:?}", response_text);
 
     // Parse json
     let json_res = serde_json::from_str::<SpotPriceRecord>(&response_text).expect(&response_text);
@@ -71,11 +71,9 @@ fn get_bearer(username: String, password: String) -> String {
         .json(&data)
         .send()
         .unwrap();
-    println!("Response = {:?}", response);
+    //println!("Response = {:?}", response);
     match response.status() {
-        reqwest::StatusCode::OK => {
-            println!("All is well");
-        }
+        reqwest::StatusCode::OK => { }
         reqwest::StatusCode::UNAUTHORIZED => {
             println!("Need to grab a new token");
         }
@@ -96,16 +94,18 @@ fn main() {
     let site_id= env::var("EASEE_SITE_ID").expect("EASEE_SITE_ID not set as environment variable");
 
     // Get price
-    let kwh_price = "3";
+    let kwh_price = "0";
     get_current_price();
 
     // Login to Easee
     let bearer = get_bearer(username, password);
-    println!("Got bearer: {}", bearer);
+    //println!("Got bearer: {}", bearer);
     // Set price
     let mut data = HashMap::new();
     data.insert("currencyId", "dkk");
     data.insert("costPerKWh", kwh_price);
+    data.insert("costPerKwhExcludeVat", kwh_price);
+    data.insert("vat", "0");
     let client = Client::new();
     let response = client.post(format!("https://api.easee.cloud/api/sites/{}/price", site_id))
         .header("Accept", "application/json")
