@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use std::env;
 use reqwest::blocking::Client;
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 //use serde_json::Result;
 //use clap::{App, Arg};
 
@@ -52,11 +53,14 @@ struct SpotPriceRecord {
 fn get_current_price() -> f64 {
     // http 'https://api.energidataservice.dk/datastore_search?resource_id=elspotprices&filters={"PriceArea":"DK2", "HourDK":"2022-08-25T21:00:00"}&sort=HourDK desc&fields=SpotPriceDKK' | jq .result.records\[0\].SpotPriceDKK
     let client = Client::new();
+    let query = json!({
+        "start": "now",
+        "sort": "HourDK",
+        "limit": "1",
+        "filter": "{\"PriceArea\":[\"DK2\"]}",
+    });
     let response = client.get("https://api.energidataservice.dk/dataset/Elspotprices")
-        .query(&(["start", "now"],
-                 ["filters", "{\"PriceArea\":[\"DK2\"]}"],
-                 ["sort", "HourDK"],
-                 ["limit", "1"]))
+        .query(&query)
         .send()
         .unwrap();
 
