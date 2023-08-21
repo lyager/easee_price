@@ -2,9 +2,9 @@ use std::collections::HashMap;
 
 use std::env;
 use reqwest::blocking::Client;
-use serde::Deserialize;
-//use serde_json::{Result, Value};
-use clap::{App, Arg};
+use serde::{Deserialize, Serialize};
+//use serde_json::Result;
+//use clap::{App, Arg};
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -13,13 +13,28 @@ struct BearerResponse {
 }
 
 #[allow(dead_code)]
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+struct SpotPriceRecordItem {
+    #[serde(rename="HourUTC")]
+    hourutc: String,
+    #[serde(rename="HourDK")]
+    hourdk: String,
+    #[serde(rename="PriceArea")]
+    pricearea: String,
+    #[serde(rename="SpotPriceDKK")]
+    spotpricedkk: Option<f64>,
+    #[serde(rename="SpotPriceEUR")]
+    spotpriceeur: Option<f64>
+}
+#[allow(dead_code)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 struct SpotPriceRecord {
     total: u32,
-    filters: String,
     limit: u32,
-    dataset: String
+    dataset: String,
+    records: Vec<SpotPriceRecordItem>
 }
 
 fn get_current_price() {
@@ -34,11 +49,14 @@ fn get_current_price() {
         .unwrap();
 
     assert!(response.status().is_success());
-    //println!("get_current_price, response {:?}", response_text);
+
+    let response_text = response.text().unwrap();
+    println!("get_current_price, response {:?}", response_text);
 
     // Parse json
-    let json_res = response.json::<SpotPriceRecord>().unwrap();
-    println!("Dataset: {}", json_res.dataset);
+    let json_res = serde_json::from_str::<SpotPriceRecord>(&response_text).expect(&response_text);
+    //let json_res = response.json::<SpotPriceRecord>().unwrap();
+    println!("Dataset: {}", json_res.total);
 }
 
 fn get_bearer(username: String, password: String) -> String {
@@ -75,18 +93,10 @@ fn main() {
     // Get bearer
     let username = env::var("EASEE_USERNAME").expect("EASEE_USERNAME not set as environemnt variable");
     let password = env::var("EASEE_PASSWORD").expect("EASEE_PASSWORD not set as environment variable");
-    let site_id= env::var("EASEE_SITE_ID").expect("EASEE_SITEID not set as environment variable");
-
-    let matches = App::new("Easee Cost Post")
-        .arg(Arg::with_name("kwh_price")
-             .required(true)
-             .index(1))
-        .get_matches();
-
-    let kwh_price = matches.value_of("kwh_price").unwrap();
-    println!("Setting kwh price to: {}", kwh_price);
+    let site_id= env::var("EASEE_SITE_ID").expect("EASEE_SITE_ID not set as environment variable");
 
     // Get price
+    let kwh_price = "3";
     get_current_price();
 
     // Login to Easee
