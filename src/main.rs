@@ -1,11 +1,9 @@
 use std::collections::HashMap;
-
 use std::env;
 use reqwest::blocking::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-//use serde_json::Result;
-//use clap::{App, Arg};
+use chrono::{Datelike, Timelike};
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -50,7 +48,42 @@ struct SpotPriceRecord {
     records: Vec<SpotPriceRecordItem>
 }
 
-fn get_current_price() -> f64 {
+fn calculate_tax_dkk() -> f64 {
+    // Ref: https://radiuselnet.dk/elnetkunder/tariffer-og-netabonnement/
+    struct AnualPeriod {
+        low: f64,
+        high: f64,
+        peak: f64
+    }
+    let winter = AnualPeriod { low: 15.09, high: 45.28, peak: 135.84 };
+    let summer = AnualPeriod { low: 15.09, high: 22.64, peak: 58.87 };
+
+    let current_time = chrono::Utc::now();
+    let month = current_time.month();
+    let hour = current_time.hour();
+    let res_in_ore = match hour {
+        0..=5 => match month {
+            4..=9 => summer.low,
+            _ => winter.low,
+        }
+        6..=16 => match month {
+            4..=9 => summer.high,
+            _ => winter.high,
+        }
+        17..=20 => match month {
+            4..=9 => summer.peak,
+            _ => winter.peak,
+        }
+        21..=24 => match month {
+            4..=9 => summer.high,
+            _ => winter.high,
+        }
+        _ => panic!("Hour out of range"),
+    };
+    res_in_ore / 100.
+}
+    
+fn get_current_spotprice_dkk() -> f64 {
     // http 'https://api.energidataservice.dk/datastore_search?resource_id=elspotprices&filters={"PriceArea":"DK2", "HourDK":"2022-08-25T21:00:00"}&sort=HourDK desc&fields=SpotPriceDKK' | jq .result.records\[0\].SpotPriceDKK
     let client = Client::new();
     let query = json!({
@@ -67,7 +100,7 @@ fn get_current_price() -> f64 {
     assert!(response.status().is_success());
 
     let response_text = response.text().unwrap();
-    println!("get_current_price, response {:?}", response_text);
+    //println!("get_current_price, response {:?}", response_text);
 
     // Parse json
     let json_res = serde_json::from_str::<SpotPriceRecord>(&response_text).expect(&response_text);
@@ -109,25 +142,22 @@ fn main() {
     let site_id= env::var("EASEE_SITE_ID").expect("EASEE_SITE_ID not set as environment variable");
 
     // Get price
-    let kwh_price: f64 = get_current_price();
-    let vat = 1.61;
-    println!("Current price per kwh: {}", kwh_price);
+    let kwh_price: f64 = get_current_spotprice_dkk();
+    let tax = calculate_tax_dkk();
+    let vat = 1.25;
+    let total_wo_vat = kwh_price + tax;
+    println!("Current price in DKK w/o VAT per kwh: {} add tax: {}", kwh_price, tax);
+    println!("Total w/ VAT: {}", total_wo_vat * vat);
 
     // Login to Easee
     let bearer = get_bearer(username, password);
     //println!("Got bearer: {}", bearer);
     // Set price
     let price = SetCharchingPrice {
-        currency_id: "dkk".into(),
-        cost_per_kwh: Some(kwh_price * vat),
-        cost_per_kwh_exclude_vat: None,
-        //cost_per_kwh_exclude_vat: Some(kwh_price),
+        currency_id: "DKK".to_string(),
+        cost_per_kwh: Some(total_wo_vat * vat),
+        cost_per_kwh_exclude_vat: Some(total_wo_vat),
         vat: vat};
-    //let mut data = HashMap::new();
-    //data.insert("currencyId", "dkk");
-    //data.insert("costPerKWh", kwh_price);
-    //data.insert("costPerKwhExcludeVat", kwh_price);
-    //data.insert("vat", "0");
     let client = Client::new();
     let response = client.post(format!("https://api.easee.cloud/api/sites/{}/price", site_id))
         .header("Accept", "application/json")
@@ -136,6 +166,5 @@ fn main() {
         .json(&price)
         .send()
         .unwrap();
-    println!("Response = {:?}", response);
-
+    response.error_for_status().unwrap();
 }
