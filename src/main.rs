@@ -137,7 +137,7 @@ fn get_bearer(username: String, password: String) -> String {
 
 fn main() {
     // Get bearer
-    let username = env::var("EASEE_USERNAME").expect("EASEE_USERNAME not set as environemnt variable");
+    let username = env::var("EASEE_USERNAME").expect("EASEE_USERNAME not set as environment variable");
     let password = env::var("EASEE_PASSWORD").expect("EASEE_PASSWORD not set as environment variable");
     let site_id= env::var("EASEE_SITE_ID").expect("EASEE_SITE_ID not set as environment variable");
 
