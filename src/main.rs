@@ -4,6 +4,8 @@ use reqwest::blocking::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use chrono::{Datelike, Timelike};
+use log::info;
+use env_logger::Env;
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -123,7 +125,7 @@ fn get_bearer(username: String, password: String) -> String {
     match response.status() {
         reqwest::StatusCode::OK => { }
         reqwest::StatusCode::UNAUTHORIZED => {
-            println!("Need to grab a new token");
+            info!("Need to grab a new token");
         }
         _ => {
             panic!("Something unexpected happened.");
@@ -136,6 +138,9 @@ fn get_bearer(username: String, password: String) -> String {
 }
 
 fn main() {
+    let env = Env::default();
+    env_logger::init_from_env(env);
+
     // Get bearer
     let username = env::var("EASEE_USERNAME").expect("EASEE_USERNAME not set as environment variable");
     let password = env::var("EASEE_PASSWORD").expect("EASEE_PASSWORD not set as environment variable");
@@ -146,8 +151,8 @@ fn main() {
     let tax = calculate_tax_dkk();
     let vat = 1.25;
     let total_wo_vat = kwh_price + tax;
-    println!("Current price in DKK w/o VAT per kwh: {} add tax: {}", kwh_price, tax);
-    println!("Total w/ VAT: {}", total_wo_vat * vat);
+    info!("Current price in DKK w/o VAT per kwh: {} add tax: {}", kwh_price, tax);
+    info!("Total w/ VAT: {}", total_wo_vat * vat);
 
     // Login to Easee
     let bearer = get_bearer(username, password);
