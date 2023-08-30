@@ -138,7 +138,7 @@ fn get_bearer(username: String, password: String) -> String {
 }
 
 fn main() {
-    let env = Env::default();
+    let env = Env::default().default_filter_or("info");
     env_logger::init_from_env(env);
 
     // Get bearer
