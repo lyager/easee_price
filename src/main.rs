@@ -3,7 +3,7 @@ use std::env;
 use reqwest::blocking::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use chrono::{Datelike, Timelike};
+use chrono::{Datelike, Timelike, Local};
 use log::info;
 use env_logger::Env;
 
@@ -40,6 +40,7 @@ struct SpotPriceRecordItem {
     #[serde(rename="SpotPriceEUR")]
     spotpriceeur: Option<f64>
 }
+
 #[allow(dead_code)]
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -48,6 +49,127 @@ struct SpotPriceRecord {
     limit: u32,
     dataset: String,
     records: Vec<SpotPriceRecordItem>
+}
+
+#[allow(dead_code)]
+#[derive(Serialize, Deserialize, Debug, Clone, fields_iter::FieldsInspect)]
+#[serde(rename_all = "camelCase")]
+struct DatahubPricelistRecordItem {
+    #[serde(rename="ChargeOwner")]
+    chargeowner: String,
+    #[serde(rename="GLN_Number")]
+    gln_number: String,
+    #[serde(rename="ChargeType")]
+    chargetype: String,
+    #[serde(rename="Note")]
+    note: String,
+    #[serde(rename="Description")]
+    description: String,
+    #[serde(rename="ValidFrom")]
+    validfrom: String,
+    #[serde(rename="ValidTo")]
+    validto: String,
+    #[serde(rename="VATClass")]
+    vatclass: String,
+    #[serde(rename="Price1")]
+    price1: f64,
+    #[serde(rename="Price2")]
+    price2: f64,
+    #[serde(rename="Price3")]
+    price3: f64,
+    #[serde(rename="Price4")]
+    price4: f64,
+    #[serde(rename="Price5")]
+    price5: f64,
+    #[serde(rename="Price6")]
+    price6: f64,
+    #[serde(rename="Price7")]
+    price7: f64,
+    #[serde(rename="Price8")]
+    price8: f64,
+    #[serde(rename="Price9")]
+    price9: f64,
+    #[serde(rename="Price10")]
+    price10: f64,
+    #[serde(rename="Price11")]
+    price11: f64,
+    #[serde(rename="Price12")]
+    price12: f64,
+    #[serde(rename="Price13")]
+    price13: f64,
+    #[serde(rename="Price14")]
+    price14: f64,
+    #[serde(rename="Price15")]
+    price15: f64,
+    #[serde(rename="Price16")]
+    price16: f64,
+    #[serde(rename="Price17")]
+    price17: f64,
+    #[serde(rename="Price18")]
+    price18: f64,
+    #[serde(rename="Price19")]
+    price19: f64,
+    #[serde(rename="Price20")]
+    price20: f64,
+    #[serde(rename="Price21")]
+    price21: f64,
+    #[serde(rename="Price22")]
+    price22: f64,
+    #[serde(rename="Price23")]
+    price23: f64,
+    #[serde(rename="TransparentInvoicing")]
+    transparentinvoicing: u8,
+    #[serde(rename="TaxIndicator")]
+    taxindicator: u8,
+    #[serde(rename="ResolutionDuration")]
+    resolutionduration: String,
+}
+
+#[allow(dead_code)]
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+struct DatahubPricelistRecord {
+    total: u32,
+    limit: u32,
+    dataset: String,
+    records: Vec<DatahubPricelistRecordItem>
+}
+
+// Make async
+fn get_radius_charges() -> f64 {
+    let client = Client::new();
+    // https://api.energidataservice.dk/dataset/DatahubPricelist?offset=0&filter={%22GLN_Number%22:[%225790000705689%22],%20%22ChargeTypeCode%22:[%22DT_C_01%22]}&end=now&sort=ValidFrom%20DESC&timezone=dk
+    let query = json!({
+        "end": "now",
+        "sort": "ValidFrom DESC",
+        "timezone": "dk",
+        "limit": "1",
+        "filter": "{\"GLN_Number\":[\"5790000705689\"], \"ChargeTypeCode\":[\"DT_C_01\"]}",
+    });
+    let response = client.get("https://api.energidataservice.dk/dataset/DatahubPricelist")
+        .query(&query)
+        .send()
+        .unwrap();
+
+    let response_text = response.text().unwrap();
+
+    let json_res = serde_json::from_str::<DatahubPricelistRecord>(&response_text).expect(&response_text);
+
+    let record = &json_res.records[0];
+    let hour_now = chrono::Local::now().hour();
+    let price_field = format!("price{}", hour_now-1);
+    println!("price_field: {}", price_field);
+
+    let field = fields_iter::FieldsIter::new(record)
+        .find(|&(name, _) | name == price_field)
+        .unwrap_or_else(|| panic!("Unable to find attribute {}", price_field))
+        .1
+        .downcast_ref::<f64>()
+        .expect("price doesn't contain type f64");
+
+
+    println!("get_radius_charges, response {:?}", field);
+    *field
 }
 
 fn calculate_tax_dkk() -> f64 {
@@ -147,12 +269,24 @@ fn main() {
     let site_id= env::var("EASEE_SITE_ID").expect("EASEE_SITE_ID not set as environment variable");
 
     // Get price
-    let kwh_price: f64 = get_current_spotprice_dkk();
-    let tax = calculate_tax_dkk();
-    let vat = 1.25;
-    let total_wo_vat = kwh_price + tax;
-    info!("Current price in DKK w/o VAT per kwh: {} add tax: {}", kwh_price, tax);
-    info!("Total w/ VAT: {}", total_wo_vat * vat);
+    let radius_charges = get_radius_charges();
+    let electricy_tax = 0.6970;
+    let energinet_charges = 0.058 + 0.054;  // nettarif/transmissionstarif + systemtarif
+    let total_charge = radius_charges + energinet_charges + electricy_tax;
+
+    let kwh_price = get_current_spotprice_dkk();
+    let vat = 1.20;
+    let total_wo_vat = kwh_price + total_charge;
+    info!("Detailed:");
+    info!(" - radius_charges: {}", radius_charges);
+    info!(" - electricy_tax: {}", electricy_tax);
+    info!(" - energinet_charges: {}", energinet_charges);
+    info!(" - spotprice now {}", kwh_price);
+    info!(" - vat {}", vat);
+    info!("");
+    info!("Current price in DKK w/o VAT per kwh: {}, charges: {}", kwh_price, total_charge);
+    info!("Total: {} w/ VAT: {}", total_wo_vat, total_wo_vat * vat);
+    panic!("JLN STOP");
 
     // Login to Easee
     let bearer = get_bearer(username, password);
