@@ -3,7 +3,7 @@ use std::env;
 use reqwest::blocking::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use chrono::{Datelike, Timelike, Local};
+use chrono::Timelike;
 use log::info;
 use env_logger::Env;
 
@@ -172,41 +172,6 @@ fn get_radius_charges() -> f64 {
     *field
 }
 
-fn calculate_tax_dkk() -> f64 {
-    // Ref: https://radiuselnet.dk/elnetkunder/tariffer-og-netabonnement/
-    struct AnualPeriod {
-        low: f64,
-        high: f64,
-        peak: f64
-    }
-    let winter = AnualPeriod { low: 15.09, high: 45.28, peak: 135.84 };
-    let summer = AnualPeriod { low: 15.09, high: 22.64, peak: 58.87 };
-
-    let current_time = chrono::Utc::now();
-    let month = current_time.month();
-    let hour = current_time.hour();
-    let res_in_ore = match hour {
-        0..=5 => match month {
-            4..=9 => summer.low,
-            _ => winter.low,
-        }
-        6..=16 => match month {
-            4..=9 => summer.high,
-            _ => winter.high,
-        }
-        17..=20 => match month {
-            4..=9 => summer.peak,
-            _ => winter.peak,
-        }
-        21..=24 => match month {
-            4..=9 => summer.high,
-            _ => winter.high,
-        }
-        _ => panic!("Hour out of range"),
-    };
-    res_in_ore / 100.
-}
-    
 fn get_current_spotprice_dkk() -> f64 {
     // http 'https://api.energidataservice.dk/datastore_search?resource_id=elspotprices&filters={"PriceArea":"DK2", "HourDK":"2022-08-25T21:00:00"}&sort=HourDK desc&fields=SpotPriceDKK' | jq .result.records\[0\].SpotPriceDKK
     let client = Client::new();
