@@ -14,6 +14,11 @@ A docker image is available
 
     docker run -e EASEE_USERNAME -e EASEE_PASSWORD -e EASEE_SITE_ID lyager/easee_price:lates
 
+## TODO
+
+- [ ] The VAT posting to Easee is off/misunderstood
+- [ ] Figure out how to read charges based on subscription
+
 ## Research section (mixed content and notes)
 
 Nice [overview](https://www.ewii.dk/privat/el/nettariffer/) of what is what, when it comes to taxes and charges. As said: `transport is what is called "tarrif"`.
