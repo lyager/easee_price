@@ -4,7 +4,7 @@ use reqwest::blocking::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use chrono::Timelike;
-use log::info;
+use log;
 use env_logger::Env;
 
 #[derive(Deserialize, Debug)]
@@ -158,7 +158,6 @@ fn get_radius_charges() -> f64 {
     let record = &json_res.records[0];
     let hour_now = chrono::Local::now().hour(); // Ranges from 0-23
     let price_field = format!("price{}", hour_now+1);
-    println!("price_field: {}", price_field);
 
     let field = fields_iter::FieldsIter::new(record)
         .find(|&(name, _) | name == price_field)
@@ -168,7 +167,7 @@ fn get_radius_charges() -> f64 {
         .expect("price doesn't contain type f64");
 
 
-    println!("get_radius_charges, response {:?}", field);
+    log::debug!("get_radius_charges, response {:?}", field);
     *field
 }
 
@@ -189,7 +188,6 @@ fn get_current_spotprice_dkk() -> f64 {
     assert!(response.status().is_success());
 
     let response_text = response.text().unwrap();
-    //println!("get_current_price, response {:?}", response_text);
 
     // Parse json
     let json_res = serde_json::from_str::<SpotPriceRecord>(&response_text).expect(&response_text);
@@ -208,11 +206,10 @@ fn get_bearer(username: String, password: String) -> String {
         .json(&data)
         .send()
         .unwrap();
-    //println!("Response = {:?}", response);
     match response.status() {
         reqwest::StatusCode::OK => { }
         reqwest::StatusCode::UNAUTHORIZED => {
-            info!("Need to grab a new token");
+            log::info!("Need to grab a new token");
         }
         _ => {
             panic!("Something unexpected happened.");
@@ -220,7 +217,6 @@ fn get_bearer(username: String, password: String) -> String {
     }
 
     let json = response.json::<BearerResponse>().unwrap();
-    //println!("Json response = {:?}", json.access_token);
     json.access_token
 }
 
@@ -242,19 +238,19 @@ fn main() {
     let kwh_price = get_current_spotprice_dkk();
     let vat = 1.20;
     let total_wo_vat = kwh_price + total_charge;
-    info!("Detailed:");
-    info!(" - radius_charges: {}", radius_charges);
-    info!(" - electricy_tax: {}", electricy_tax);
-    info!(" - energinet_charges: {}", energinet_charges);
-    info!(" - spotprice now {}", kwh_price);
-    info!(" - vat {}", vat);
-    info!("");
-    info!("Current price in DKK w/o VAT per kwh: {}, charges: {}", kwh_price, total_charge);
-    info!("Total: {} w/ VAT: {}", total_wo_vat, total_wo_vat * vat);
+    log::debug!("Detailed:");
+    log::debug!(" - radius_charges: {}", radius_charges);
+    log::debug!(" - electricy_tax: {}", electricy_tax);
+    log::debug!(" - energinet_charges: {}", energinet_charges);
+    log::debug!(" - spotprice now {}", kwh_price);
+    log::debug!(" - vat {}", vat);
+    log::debug!("");
+    log::info!("Current price in DKK w/o VAT ({}) per kwh: {}, charges: {}", vat, kwh_price, total_charge);
+    log::info!("Total: {} w/ VAT: {}", total_wo_vat, total_wo_vat * vat);
 
     // Login to Easee
     let bearer = get_bearer(username, password);
-    //println!("Got bearer: {}", bearer);
+
     // Set price
     let price = SetCharchingPrice {
         currency_id: "DKK".to_string(),
