@@ -16,6 +16,7 @@ A docker image is available
 
 ## TODO
 
+- [ ] Investigate if `DataTime` to priceX conversion could fail.
 - [ ] The VAT posting to Easee is off/misunderstood
 - [ ] Figure out how to read charges based on subscription
 
