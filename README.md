@@ -22,7 +22,7 @@ A docker image is available
 
 ## Research section (mixed content and notes)
 
-Nice [overview](https://www.ewii.dk/privat/el/nettariffer/) of what is what, when it comes to taxes and charges. As said: `transport is what is called "tarrif"`.
+Nice [overview](https://www.ewii.dk/privat/el/nettariffer/) of what is what, when it comes to taxes and charges. As said: `transport is what is called "tarif"`.
 Another, and more officiel overview [Aktuelle Tariffer](https://energinet.dk/el/elmarkedet/tariffer/aktuelle-tariffer/).
 
 As a private consumer, you'll have to look at what is called "C prices", which again is subdivided into which part of Denmark you leave: east or west.

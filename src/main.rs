@@ -237,18 +237,18 @@ fn main() {
 
     let kwh_price = get_current_spotprice_dkk();
     let total_wo_vat = kwh_price + total_charge;
-    let vat = 0.20;
-    let vat_dkk = total_wo_vat * vat;
+    let vat_pct = 0.20;
+    let vat_dkk = total_wo_vat * vat_pct;
 
     log::debug!("Detailed:");
     log::debug!(" - radius_charges: {}", radius_charges);
     log::debug!(" - electricy_tax: {}", electricy_tax);
     log::debug!(" - energinet_charges: {}", energinet_charges);
     log::debug!(" - spotprice now {}", kwh_price);
-    log::debug!(" - vat {}", vat);
+    log::debug!(" - vat {}%", vat_pct);
     log::debug!("");
-    log::info!("Current price in DKK w/o VAT ({}) per kwh: {}, charges: {}", vat, kwh_price, total_charge);
-    log::info!("Total: {} w/ VAT: {}", total_wo_vat, total_wo_vat + vat_dkk);
+    log::info!("Current price in DKK w/o VAT ({}%) per kwh: {} DKK, charges: {} DKK", vat_pct, kwh_price, total_charge);
+    log::info!("Total: {} DKK w/ VAT: {} DKK", total_wo_vat, total_wo_vat + vat_dkk);
 
     // Login to Easee
     let bearer = get_bearer(username, password);
@@ -258,7 +258,9 @@ fn main() {
         currency_id: "DKK".to_string(),
         cost_per_kwh: Some(total_wo_vat + vat_dkk),
         cost_per_kwh_exclude_vat: Some(total_wo_vat),
-        vat: vat_dkk};
+        vat: vat_pct * 100.};
+
+    log::debug!("SetChargingPrice: {:?}", price);
     let client = Client::new();
     let response = client.post(format!("https://api.easee.cloud/api/sites/{}/price", site_id))
         .header("Accept", "application/json")
