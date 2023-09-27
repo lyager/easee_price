@@ -1,6 +1,6 @@
 ## Easee KWH Price poster
 
-Based on the current KwH price in east Denmark, post the price to an [Easee](https://easee.com/) elecric car charger.
+Based on the current KwH price in east Denmark, post the price to an [Easee](https://easee.com/) electric car charger.
 
 What you'll need from Easee is set via the following enviroments variables
 
@@ -16,7 +16,7 @@ A docker image is available
 
 ## TODO
 
-- [ ] Investigate if `DataTime` to priceX conversion could fail.
+- [ ] Investigate if `DataTime` to priceX conversion could fal.
 - [ ] The VAT posting to Easee is off/misunderstood
 - [ ] Figure out how to read charges based on subscription
 
