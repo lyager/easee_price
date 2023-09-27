@@ -156,8 +156,8 @@ fn get_radius_charges() -> f64 {
     let json_res = serde_json::from_str::<DatahubPricelistRecord>(&response_text).expect(&response_text);
 
     let record = &json_res.records[0];
-    let hour_now = chrono::Local::now().hour();
-    let price_field = format!("price{}", hour_now-1);
+    let hour_now = chrono::Local::now().hour(); // Ranges from 0-23
+    let price_field = format!("price{}", hour_now+1);
     println!("price_field: {}", price_field);
 
     let field = fields_iter::FieldsIter::new(record)
