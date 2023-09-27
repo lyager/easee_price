@@ -3,7 +3,7 @@ use std::env;
 use reqwest::blocking::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use chrono::{Datelike, Timelike};
+use chrono::{Datelike, Timelike, Local};
 use log::info;
 use env_logger::Env;
 
@@ -156,23 +156,20 @@ fn get_radius_charges() -> f64 {
     let json_res = serde_json::from_str::<DatahubPricelistRecord>(&response_text).expect(&response_text);
 
     let record = &json_res.records[0];
-    //let record = json_res.records[0].clone();
-    
-    //for (name, value) in fields_iter::FieldsIter::new(record) {
-    //    println!("Name {:?}, value: {:?}", name, value.downcast_ref::<String>());
-    //}
+    let hour_now = chrono::Local::now().hour();
+    let price_field = format!("price{}", hour_now-1);
+    println!("price_field: {}", price_field);
+
     let field = fields_iter::FieldsIter::new(record)
-            .find(|&(name, _) | name == "price1");
-    //let field2 = fields_iter::FieldsIter::new(record)
-    //        .find(|&(name, _) | name == "price1")
-    //        .expect("no 'price1' field")
-    //        .1
-    //        .downcast_mut::<f64>()
-    //        .expect("field 'price1' not of type 'f64'");
+        .find(|&(name, _) | name == price_field)
+        .unwrap_or_else(|| panic!("Unable to find attribute {}", price_field))
+        .1
+        .downcast_ref::<f64>()
+        .expect("price doesn't contain type f64");
+
 
     println!("get_radius_charges, response {:?}", field);
-    //assert!(response.status().is_success());
-    0.0
+    *field
 }
 
 fn calculate_tax_dkk() -> f64 {
@@ -272,14 +269,24 @@ fn main() {
     let site_id= env::var("EASEE_SITE_ID").expect("EASEE_SITE_ID not set as environment variable");
 
     // Get price
-    let charges = get_radius_charges();
+    let radius_charges = get_radius_charges();
+    let electricy_tax = 0.6970;
+    let energinet_charges = 0.058 + 0.054;  // nettarif/transmissionstarif + systemtarif
+    let total_charge = radius_charges + energinet_charges + electricy_tax;
+
+    let kwh_price = get_current_spotprice_dkk();
+    let vat = 1.20;
+    let total_wo_vat = kwh_price + total_charge;
+    info!("Detailed:");
+    info!(" - radius_charges: {}", radius_charges);
+    info!(" - electricy_tax: {}", electricy_tax);
+    info!(" - energinet_charges: {}", energinet_charges);
+    info!(" - spotprice now {}", kwh_price);
+    info!(" - vat {}", vat);
+    info!("");
+    info!("Current price in DKK w/o VAT per kwh: {}, charges: {}", kwh_price, total_charge);
+    info!("Total: {} w/ VAT: {}", total_wo_vat, total_wo_vat * vat);
     panic!("JLN STOP");
-    let kwh_price: f64 = get_current_spotprice_dkk();
-    let tax = calculate_tax_dkk();
-    let vat = 1.25;
-    let total_wo_vat = kwh_price + tax;
-    info!("Current price in DKK w/o VAT per kwh: {} add tax: {}", kwh_price, tax);
-    info!("Total w/ VAT: {}", total_wo_vat * vat);
 
     // Login to Easee
     let bearer = get_bearer(username, password);
