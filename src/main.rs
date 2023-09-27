@@ -211,8 +211,8 @@ fn get_current_spotprice_dkk() -> f64 {
     // http 'https://api.energidataservice.dk/datastore_search?resource_id=elspotprices&filters={"PriceArea":"DK2", "HourDK":"2022-08-25T21:00:00"}&sort=HourDK desc&fields=SpotPriceDKK' | jq .result.records\[0\].SpotPriceDKK
     let client = Client::new();
     let query = json!({
-        "start": "now",
-        "sort": "HourDK",
+        "end": "now",
+        "sort": "HourDK DESC",
         "limit": "1",
         "filter": "{\"PriceArea\":[\"DK2\"]}",
     });
@@ -286,7 +286,6 @@ fn main() {
     info!("");
     info!("Current price in DKK w/o VAT per kwh: {}, charges: {}", kwh_price, total_charge);
     info!("Total: {} w/ VAT: {}", total_wo_vat, total_wo_vat * vat);
-    panic!("JLN STOP");
 
     // Login to Easee
     let bearer = get_bearer(username, password);
