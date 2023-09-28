@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::env;
-use reqwest::blocking::Client;
+use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use chrono::Timelike;
@@ -135,8 +135,7 @@ struct DatahubPricelistRecord {
     records: Vec<DatahubPricelistRecordItem>
 }
 
-// Make async
-fn get_radius_charges() -> f64 {
+async fn get_radius_charges() -> f64 {
     let client = Client::new();
     // https://api.energidataservice.dk/dataset/DatahubPricelist?offset=0&filter={%22GLN_Number%22:[%225790000705689%22],%20%22ChargeTypeCode%22:[%22DT_C_01%22]}&end=now&sort=ValidFrom%20DESC&timezone=dk
     let query = json!({
@@ -149,9 +148,10 @@ fn get_radius_charges() -> f64 {
     let response = client.get("https://api.energidataservice.dk/dataset/DatahubPricelist")
         .query(&query)
         .send()
+        .await
         .unwrap();
 
-    let response_text = response.text().unwrap();
+    let response_text = response.text().await.unwrap();
 
     let json_res = serde_json::from_str::<DatahubPricelistRecord>(&response_text).expect(&response_text);
 
@@ -171,7 +171,7 @@ fn get_radius_charges() -> f64 {
     *field
 }
 
-fn get_current_spotprice_dkk() -> f64 {
+async fn get_current_spotprice_dkk() -> f64 {
     // http 'https://api.energidataservice.dk/datastore_search?resource_id=elspotprices&filters={"PriceArea":"DK2", "HourDK":"2022-08-25T21:00:00"}&sort=HourDK desc&fields=SpotPriceDKK' | jq .result.records\[0\].SpotPriceDKK
     let client = Client::new();
     let query = json!({
@@ -183,18 +183,19 @@ fn get_current_spotprice_dkk() -> f64 {
     let response = client.get("https://api.energidataservice.dk/dataset/Elspotprices")
         .query(&query)
         .send()
+        .await
         .unwrap();
 
     assert!(response.status().is_success());
 
-    let response_text = response.text().unwrap();
+    let response_text = response.text().await.unwrap();
 
     // Parse json
     let json_res = serde_json::from_str::<SpotPriceRecord>(&response_text).expect(&response_text);
     json_res.records[0].spotpricedkk.unwrap() / 1000.
 }
 
-fn get_bearer(username: String, password: String) -> String {
+async fn get_bearer(username: String, password: String) -> String {
     let base_url = "https://api.easee.cloud/api/accounts/login";
     let client = Client::new();
     let mut data = HashMap::new();
@@ -205,6 +206,7 @@ fn get_bearer(username: String, password: String) -> String {
         .header("Content-Type", "application/*+json")
         .json(&data)
         .send()
+        .await
         .unwrap();
     match response.status() {
         reqwest::StatusCode::OK => { }
@@ -216,11 +218,12 @@ fn get_bearer(username: String, password: String) -> String {
         },
     }
 
-    let json = response.json::<BearerResponse>().unwrap();
+    let json = response.json::<BearerResponse>().await.unwrap();
     json.access_token
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let env = Env::default().default_filter_or("info");
     env_logger::init_from_env(env);
 
@@ -230,12 +233,12 @@ fn main() {
     let site_id= env::var("EASEE_SITE_ID").expect("EASEE_SITE_ID not set as environment variable");
 
     // Get price
-    let radius_charges = get_radius_charges();
+    let radius_charges = get_radius_charges().await;
     let electricy_tax = 0.6970;
     let energinet_charges = 0.058 + 0.054;  // nettarif/transmissionstarif + systemtarif
     let total_charge = radius_charges + energinet_charges + electricy_tax;
 
-    let kwh_price = get_current_spotprice_dkk();
+    let kwh_price = get_current_spotprice_dkk().await;
     let total_wo_vat = kwh_price + total_charge;
     let vat_pct = 0.20;
     let vat_dkk = total_wo_vat * vat_pct;
@@ -251,7 +254,7 @@ fn main() {
     log::info!("Total: {} DKK w/ VAT: {} DKK", total_wo_vat, total_wo_vat + vat_dkk);
 
     // Login to Easee
-    let bearer = get_bearer(username, password);
+    let bearer = get_bearer(username, password).await;
 
     // Set price
     let price = SetCharchingPrice {
@@ -268,6 +271,7 @@ fn main() {
         .header("Authorization", format!("Bearer {}", bearer))
         .json(&price)
         .send()
+        .await
         .unwrap();
     response.error_for_status().unwrap();
 }

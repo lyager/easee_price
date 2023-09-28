@@ -14,3 +14,4 @@ chrono = "0.4.26"
 log = "0.4.20"
 env_logger = "0.10.0"
 fields-iter = "0.0.3"
+tokio = { version = "1.32.0", features = ["full"] }
